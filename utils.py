@@ -25,13 +25,6 @@ def draw_graph(G):
     pos = nx.spring_layout(G)
     nx.draw(G, node_color=colors, pos=pos, node_size=70, ax=ax)
 
-def partition_to_vector(partition):
-    x = np.ones(len(partition[0] | partition[1]))
-    x[list(partition[1])] = -1
-    return x
-
-def vector_to_partition(x):
-    return [set(np.where(x == 1)[0]), set(np.where(x == -1)[0])]
     
-def calculate_overlap(x_true, x_predict):
-    return np.abs(1 / len(x_true) * x_true @ x_predict)
+def calculate_overlap(x_true, x_pred):
+    return np.abs(1 / len(x_true) * x_true @ x_pred)
