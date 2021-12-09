@@ -12,10 +12,18 @@ def generate_sbm_graph(size_1, size_2, a, b):
     probs = [[a / N, b / N], [b / N, a / N]]
     return nx.generators.community.stochastic_block_model(sizes, probs)
 
-def draw_graph(G):
+def draw_graph(G, x):
+    """
+    Plots graph with colored nodes according to the coloring x
+
+    Parameters
+    ----------
+    G : nx.Graph 
+    x : np.ndarray - coloring vector of size {-1,1}^N 
+    """
     colors = []
     for node in G.nodes():
-        if node in G.graph['partition'][0]:
+        if x[node] == 1:
             colors.append('blue')
         else:
             colors.append('red')
@@ -28,3 +36,8 @@ def draw_graph(G):
     
 def calculate_overlap(x_true, x_pred):
     return np.abs(1 / len(x_true) * x_true @ x_pred)
+
+
+def check_ab_condition(a, b):
+    if (a - b)**2 <= 2 * (a+b):
+        raise ValueError('The choice of (a, b) are not valid, the variables must satisfy (a - b)^2 <= 2*(a+b)')

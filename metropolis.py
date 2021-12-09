@@ -39,10 +39,11 @@ def calculate_stationary_ratio(node):
 def metropolis(max_run, max_iter):
     metropolis_simulations = [] # list containing the results of MCMC runs
     elements = list(G.nodes) #list of nodes for silmulating the sampling
-    elements.append('REJECT') 
+    elements.append('REJECT')
+    overlaps = []
+    x_true = partition_to_vector('block') 
 
     for run in range(max_run):
-        print(f' *** run {run} ***')
         #initial state
         x = np.random.choice((-1,1), N)
         
@@ -66,16 +67,21 @@ def metropolis(max_run, max_iter):
             step = np.random.choice(elements , 1, p=probabilities)
             
 
-            #move on Metropolis chain (set new coloring)
+            #move on Metropolis chain
             if step != 'REJECT':
                 G.nodes[int(step)]['estimate'] = -1 * G.nodes[int(step)]['estimate']
-
+            
+       
         result = partition_to_vector('estimate')
+        overlap = calculate_overlap(result, x_true)
+        print(f'run: {run}   overlap: {overlap}')
+        overlaps.append(overlap)
         metropolis_simulations.append(result)
 
     return metropolis_simulations
      
 
 def estimate_posterior_mean(runs):
-    return np.sign(sum(runs))
+    estimator = sum(runs)
+    return np.sign(estimator) + (estimator == 0) 
 
