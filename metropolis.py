@@ -7,6 +7,13 @@ from tqdm import tqdm
 
 #####################    METROPOLIS    #####################  
 
+class Result():
+    def __init__(self, name):
+        self.name = name
+        self.overlaps = []
+        self.x = None
+
+
 def partition_to_vector(label):
     x = np.ones(N)
     for i in range(N):
@@ -28,15 +35,69 @@ def calculate_local_hamiltonian(node):
         hamiltonian += calculate_h(node, n) * G.nodes[n]['estimate']
     return hamiltonian
 
-
-
 def calculate_stationary_ratio(node):
     hamiltonian = calculate_local_hamiltonian(node)
     return np.exp(- 2 * G.nodes[node]['estimate'] * hamiltonian)
     # for Neighbour(node) calculate prod e^{h_ij x_i x_j}
     
 
-def metropolis(max_run, max_iter):
+def metropolis_lazy(max_run, max_iter, fast_run=True):
+    results = [] # list containing the results of MCMC results
+    x_true = partition_to_vector('block') 
+
+    for run in range(max_run):
+        #initial state
+        x = np.random.choice((-1,1), N)    
+        for node in range(N): 
+            G.nodes[node]['estimate'] = x[node]
+
+        #initialize result object
+        result = Result(run)
+        initial_overlap = calculate_overlap(x, x_true)
+        result.overlaps.append(initial_overlap)
+
+        with tqdm(total=max_iter) as pbar:
+            iter = 0
+            while iter < max_iter:
+                #propose step
+                proposed_node = np.random.randint(0, N)
+          
+                #calculate acceptence prob
+                stationary_ratio = calculate_stationary_ratio(proposed_node)
+                acceptence = min(1, stationary_ratio)
+           
+                if random.random() < acceptence:
+                    #move on Metropolis chain
+                    G.nodes[proposed_node]['estimate'] = -1 * G.nodes[proposed_node]['estimate']
+
+                    if not fast_run:
+                        x_pred = partition_to_vector('estimate')
+                        current_overlap = calculate_overlap(x_true,x_pred)
+                        result.overlaps.append(current_overlap)
+                    
+                    iter = iter + 1
+                    pbar.update(1)
+                
+        x_pred = partition_to_vector('estimate')
+        overlap = calculate_overlap(x_true,x_pred)
+        print(f'run: {run}   overlap: {"{:.3f}".format(overlap)}')
+
+        # save results 
+        result.x = partition_to_vector('estimate')
+        results.append(result)
+
+    return results
+     
+
+def estimate_posterior_mean(results):
+    estimator = np.zeros(N)
+    for result in results:
+        estimator = estimator + result.x
+    return np.sign(estimator) + (estimator == 0) 
+
+
+
+""" def metropolis(max_run, max_iter):
     metropolis_simulations = [] # list containing the results of MCMC runs
     elements = list(G.nodes) #list of nodes for silmulating the sampling
     elements.append('REJECT')
@@ -78,10 +139,4 @@ def metropolis(max_run, max_iter):
         overlaps.append(overlap)
         metropolis_simulations.append(result)
 
-    return metropolis_simulations
-     
-
-def estimate_posterior_mean(runs):
-    estimator = sum(runs)
-    return np.sign(estimator) + (estimator == 0) 
-
+    return metropolis_simulations """
