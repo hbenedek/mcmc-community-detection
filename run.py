@@ -3,11 +3,11 @@ from utils import *
 
 check_ab_condition(a, b)
 
-results = run_monte_carlo(max_run, max_iter)
+results = houdayer(max_run, max_iter)
 
-x_pred = estimate_posterior_mean(results)
-x_true = partition_to_vector('block')
+#x_pred = estimate_posterior_mean(results)
+#x_true = partition_to_vector('block')
 
-overlap = calculate_overlap(x_pred, x_true)
+#overlap = calculate_overlap(x_pred, x_true)
 
-print(f'Bayes estimator overlap: {"{:.3f}".format(overlap)}')
+#print(f'Bayes estimator overlap: {"{:.3f}".format(overlap)}')

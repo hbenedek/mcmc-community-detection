@@ -26,46 +26,45 @@ def calculate_h(node_i, node_j):
     else:
         return np.log(1 - a / N) - np.log(1 - b / N)
 
-def calculate_local_hamiltonian(node):
-    return sum([calculate_h(node, neighbor) * G.nodes[neighbor]['estimate'] for neighbor in G.neighbors(node)])
+def calculate_local_hamiltonian(node, estimate):
+    return sum([calculate_h(node, neighbor) * G.nodes[neighbor][estimate] for neighbor in G.neighbors(node)])
 
-def calculate_stationary_ratio(node):
-    hamiltonian = calculate_local_hamiltonian(node)
-    return np.exp(- G.nodes[node]['estimate'] * hamiltonian)
+def calculate_stationary_ratio(node, estimate):
+    hamiltonian = calculate_local_hamiltonian(node, estimate)
+    return np.exp(- G.nodes[node][estimate] * hamiltonian)
 
-def metropolis_step():
+def metropolis_step(estimate):
     #propose step
     proposed_node = np.random.randint(0, N)
           
     #calculate acceptance prob
-    stationary_ratio = calculate_stationary_ratio(proposed_node)
+    stationary_ratio = calculate_stationary_ratio(proposed_node, estimate)
     acceptance = min(1, stationary_ratio)
            
     if random.random() < acceptance:
         #move on Metropolis chain
-        G.nodes[proposed_node]['estimate'] = - G.nodes[proposed_node]['estimate']
+        G.nodes[proposed_node][estimate] = - G.nodes[proposed_node][estimate]
 
 
-def run_monte_carlo(max_run, max_iter, fast_run=True):
+def run_metropolis(max_run, max_iter, fast_run=True):
     results = [] # list containing the results of MCMC results
     x_true = partition_to_vector('block') 
 
     for run in range(max_run):
+
+        #initialize result object
+        result = Result(run)
+
         #initial state
         x = np.random.choice((-1,1), N)    
         for node in range(N): 
             G.nodes[node]['estimate'] = x[node]
 
-        #initialize result object
-        result = Result(run)
-        # initial_overlap = calculate_overlap(x, x_true)
-        # result.overlaps.append(initial_overlap)
-
         with tqdm(total=max_iter) as pbar:
             iter = 0
             while iter < max_iter:
 
-                metropolis_step()
+                metropolis_step('estimate')
 
                 if not fast_run:
                     x_pred = partition_to_vector('estimate')
@@ -84,7 +83,68 @@ def run_monte_carlo(max_run, max_iter, fast_run=True):
         results.append(result)
 
     return results
-     
+
+
+def houdayer(max_run, max_iter):
+    results = [] # list containing the results of MCMC results
+    x_true = partition_to_vector('block') 
+
+    for run in range(max_run):
+        
+        #initialize result object
+        result = Result(run)
+
+        #initial state
+        x1 = np.random.choice((-1,1), N)    
+        x2 = np.random.choice((-1,1), N)  
+
+        for node in range(N): 
+            G.nodes[node]['estimate1'] = x1[node]
+            G.nodes[node]['estimate2'] = x2[node]
+
+        with tqdm(total=max_iter) as pbar:
+            iter = 0
+            while iter < max_iter:
+                #compute local overlap 
+                potential_nodes = []
+                for node in range(N): 
+                    local_overlap = G.nodes[node]['estimate1'] * G.nodes[node]['estimate2']
+                    G.nodes[node]['local_overlap'] = local_overlap
+                    if local_overlap == -1:
+                        potential_nodes.append(node)
+
+                #propose flip
+                if len(potential_nodes) > 0:
+                    proposed_node = np.random.choice(potential_nodes, 1)
+                    H = G.subgraph(potential_nodes)
+                    target_nodes = nx.node_connected_component(H, int(proposed_node))
+        
+                    #perform houdayer move
+                    for node in target_nodes:
+                        G.nodes[node]['estimate1'] = - G.nodes[node]['estimate1']
+                        G.nodes[node]['estimate2'] = - G.nodes[node]['estimate2']
+
+                
+                #perform metropolis steps
+                metropolis_step('estimate1')
+                metropolis_step('estimate2')
+
+                iter = iter + 1
+                pbar.update(1)
+
+        # save results 
+        result.x1 = partition_to_vector('estimate1')
+        result.x2 = partition_to_vector('estimate2')
+        results.append(result)
+
+        overlap1 = calculate_overlap(x_true, result.x1)
+        overlap2 = calculate_overlap(x_true, result.x2)
+        print(f'run: {run}   overlap1: {"{:.3f}".format(overlap1)}  overlap1: {"{:.3f}".format(overlap2)}')
+
+
+    return results
+    
+
 
 def estimate_posterior_mean(results):
     estimator = np.zeros(N)
