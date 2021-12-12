@@ -3,7 +3,7 @@ from utils import *
 
 check_ab_condition(a, b)
 
-results = metropolis_lazy(max_run, max_iter)
+results = run_monte_carlo(max_run, max_iter)
 
 x_pred = estimate_posterior_mean(results)
 x_true = partition_to_vector('block')

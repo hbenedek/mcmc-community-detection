@@ -10,8 +10,8 @@ def prior(N):
 def generate_sbm_graph(size_1, size_2, a, b):
     sizes = [size_1, size_2]
     N = sum(sizes)
-    probs = [[a / N, b / N], [b / N, a / N]]
-    return nx.generators.community.stochastic_block_model(sizes, probs)
+    probes = [[a / N, b / N], [b / N, a / N]]
+    return nx.generators.community.stochastic_block_model(sizes, probes)
 
 def draw_graph(G, x):
     """

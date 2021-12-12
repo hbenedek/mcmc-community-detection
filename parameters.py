@@ -5,7 +5,9 @@ b = 1
 N = 50
 
 prior = prior(N)
+print(f'community sizes: {prior} - {N-prior}')
+
 G = generate_sbm_graph(prior, N - prior, a, b)
 
-max_run = 10
-max_iter = 1000
+max_run = 100
+max_iter = 500
