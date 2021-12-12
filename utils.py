@@ -3,6 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import random
 import seaborn as sns
+import pickle
 
 def prior(N):
     return np.random.binomial(N, 1/2)
@@ -48,3 +49,13 @@ def plot_overlap_evolution(overlaps):
     N = len(overlaps)
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 6))
     sns.lineplot(np.arange(N), np.array(overlaps))
+
+
+def dump_pickle(data, file):
+    with open(file, 'wb') as handle:
+        pickle.dump(data , handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+def load_pickle(file):
+    with open(file, 'rb') as handle:
+        data = pickle.load(handle)
+    return data
