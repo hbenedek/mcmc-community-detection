@@ -59,3 +59,7 @@ def load_pickle(file):
     with open(file, 'rb') as handle:
         data = pickle.load(handle)
     return data
+
+
+def adjacency_to_networkx(A):
+    return nx.convert_matrix.from_numpy_matrix(A)
