@@ -12,7 +12,8 @@ hamiltonian = []
 class Result():
     def __init__(self, name):
         self.name = name
-        self.overlaps = []
+        self.overlaps1 = []
+        self.overlaps2 = []
         self.x = None
  
 def partition_to_vector(label):
@@ -43,8 +44,6 @@ def metropolis_step(estimate):
         #move on Metropolis chain
         G.nodes[proposed_node][estimate] = - G.nodes[proposed_node][estimate]
 
-ham = []
-
 
 def run_metropolis(max_run, max_iter, fast_run=True):
     results = [] # list containing the results of MCMC results
@@ -70,7 +69,7 @@ def run_metropolis(max_run, max_iter, fast_run=True):
                 if not fast_run:
                     x_pred = partition_to_vector('estimate')
                     current_overlap = calculate_overlap(x_true,x_pred)
-                    result.overlaps.append(current_overlap)
+                    result.overlaps1.append(current_overlap)
 
                 iter = iter + 1
                 pbar.update(1)
@@ -82,13 +81,29 @@ def run_metropolis(max_run, max_iter, fast_run=True):
         # save results 
         result.x = partition_to_vector('estimate')
         results.append(result)
+
+    return results
+
+def houdayer_step():
+    potential_nodes = []
     for node in range(N): 
-        ham.append(calculate_local_hamiltonian(node, 'estimate'))
+        local_overlap = G.nodes[node]['estimate1'] * G.nodes[node]['estimate2']
+        G.nodes[node]['local_overlap'] = local_overlap
+        if local_overlap == -1:
+            potential_nodes.append(node)
 
-    return results, ham
+    #propose flip
+    if len(potential_nodes) > 0:
+        proposed_node = np.random.choice(potential_nodes, 1)
+        H = G.subgraph(potential_nodes)
+        target_nodes = nx.node_connected_component(H, int(proposed_node))
 
+        #perform houdayer move
+        for node in target_nodes:
+            G.nodes[node]['estimate1'] = - G.nodes[node]['estimate1']
+            G.nodes[node]['estimate2'] = - G.nodes[node]['estimate2']
 
-def houdayer(max_run, max_iter):
+def houdayer(max_run, max_iter, n, fast_run=True):
     results = [] # list containing the results of MCMC results
     x_true = partition_to_vector('block') 
 
@@ -109,28 +124,21 @@ def houdayer(max_run, max_iter):
             iter = 0
             while iter < max_iter:
                 #compute local overlap 
-                potential_nodes = []
-                for node in range(N): 
-                    local_overlap = G.nodes[node]['estimate1'] * G.nodes[node]['estimate2']
-                    G.nodes[node]['local_overlap'] = local_overlap
-                    if local_overlap == -1:
-                        potential_nodes.append(node)
-
-                #propose flip
-                if len(potential_nodes) > 0:
-                    proposed_node = np.random.choice(potential_nodes, 1)
-                    H = G.subgraph(potential_nodes)
-                    target_nodes = nx.node_connected_component(H, int(proposed_node))
-        
-                    #perform houdayer move
-                    for node in target_nodes:
-                        G.nodes[node]['estimate1'] = - G.nodes[node]['estimate1']
-                        G.nodes[node]['estimate2'] = - G.nodes[node]['estimate2']
-
-                
+              
+                if iter % n == 0:
+                      houdayer_step()
                 #perform metropolis steps
                 metropolis_step('estimate1')
                 metropolis_step('estimate2')
+
+                if not fast_run:
+                    x1_pred = partition_to_vector('estimate1')
+                    x2_pred = partition_to_vector('estimate2')
+                    current_overlap1 = calculate_overlap(x_true,x1_pred)
+                    current_overlap2 = calculate_overlap(x_true,x2_pred)
+                    result.overlaps1.append(current_overlap1)
+                    result.overlaps2.append(current_overlap2)
+
 
                 iter = iter + 1
                 pbar.update(1)
@@ -148,9 +156,16 @@ def houdayer(max_run, max_iter):
     return results
     
 
+def estimate_posterior_mean(results, algorithm):
+    estimator1 = np.zeros(N)
+    estimator2 = np.zeros(N)
+    if algorithm == 'metropolis':
+        for result in results:
+            estimator1 = estimator1 + result.x
+        return np.sign(estimator1) + (estimator1 == 0) 
+    if algorithm == 'houdayer':
+        for result in results:
+            estimator1 = estimator1 + result.x1
+            estimator2 = estimator2 + result.x2
+        return np.sign(estimator1) + (estimator1 == 0), np.sign(estimator2) + (estimator2 == 0)
 
-def estimate_posterior_mean(results):
-    estimator = np.zeros(N)
-    for result in results:
-        estimator = estimator + result.x
-    return np.sign(estimator) + (estimator == 0) 

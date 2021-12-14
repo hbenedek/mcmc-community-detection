@@ -1,13 +1,12 @@
 from metropolis import *
 from utils import *
 
-check_ab_condition(a, b)
-
-results = run_metropolis(max_run, max_iter, fast_run=False)
-
-x_pred = estimate_posterior_mean(results)
+results = houdayer(max_run, max_iter, 100, fast_run=False)
+x1, x2 = estimate_posterior_mean(results, 'houdayer')
 x_true = partition_to_vector('block')
 
-overlap = calculate_overlap(x_pred, x_true)
+overlap1 = calculate_overlap(x1, x_true)
+overlap2 = calculate_overlap(x2, x_true)
 
-print(f'Bayes estimator overlap: {"{:.3f}".format(overlap)}')
+print(f'Bayes overlap1: {"{:.3f}".format(overlap1)}')
+print(f'Bayes overlap2: {"{:.3f}".format(overlap2)}')
