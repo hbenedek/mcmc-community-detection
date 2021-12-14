@@ -7,6 +7,8 @@ from tqdm import tqdm
 
 #####################    METROPOLIS    #####################  
 
+hamiltonian = []
+
 class Result():
     def __init__(self, name):
         self.name = name
@@ -20,14 +22,10 @@ def partition_to_vector(label):
     x[x == 0] = -1
     return x
 
-def calculate_h(node_i, node_j):
-    if G.has_edge(node_i, node_j):
-        return np.log(a) - np.log(b)
-    else:
-        return np.log(1 - a / N) - np.log(1 - b / N)
 
 def calculate_local_hamiltonian(node, estimate):
-    return sum([calculate_h(node, neighbor) * G.nodes[neighbor][estimate] for neighbor in G.neighbors(node)])
+    nodes = set(G.nodes) - set([node])
+    return sum([h[node][n] * G.nodes[n][estimate] for n in list(nodes)])
 
 def calculate_stationary_ratio(node, estimate):
     hamiltonian = calculate_local_hamiltonian(node, estimate)
@@ -45,6 +43,8 @@ def metropolis_step(estimate):
         #move on Metropolis chain
         G.nodes[proposed_node][estimate] = - G.nodes[proposed_node][estimate]
 
+ham = []
+
 
 def run_metropolis(max_run, max_iter, fast_run=True):
     results = [] # list containing the results of MCMC results
@@ -59,6 +59,7 @@ def run_metropolis(max_run, max_iter, fast_run=True):
         x = np.random.choice((-1,1), N)    
         for node in range(N): 
             G.nodes[node]['estimate'] = x[node]
+    
 
         with tqdm(total=max_iter) as pbar:
             iter = 0
@@ -81,8 +82,10 @@ def run_metropolis(max_run, max_iter, fast_run=True):
         # save results 
         result.x = partition_to_vector('estimate')
         results.append(result)
+    for node in range(N): 
+        ham.append(calculate_local_hamiltonian(node, 'estimate'))
 
-    return results
+    return results, ham
 
 
 def houdayer(max_run, max_iter):
@@ -139,7 +142,7 @@ def houdayer(max_run, max_iter):
 
         overlap1 = calculate_overlap(x_true, result.x1)
         overlap2 = calculate_overlap(x_true, result.x2)
-        print(f'run: {run}   overlap1: {"{:.3f}".format(overlap1)}  overlap1: {"{:.3f}".format(overlap2)}')
+        print(f'run: {run}   overlap1: {"{:.3f}".format(overlap1)}  overlap2: {"{:.3f}".format(overlap2)}')
 
 
     return results

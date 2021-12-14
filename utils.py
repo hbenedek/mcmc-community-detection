@@ -14,6 +14,20 @@ def generate_sbm_graph(size_1, size_2, a, b):
     probes = [[a / N, b / N], [b / N, a / N]]
     return nx.generators.community.stochastic_block_model(sizes, probes)
 
+def init_h(G, N, a, b):
+    h = np.zeros((N, N))
+    edge1 = np.log(a) - np.log(b)
+    edge0 = np.log(1 - a / N) - np.log(1 - b / N)
+    for i in range(N):
+        for j in range(i):
+            if G.has_edge(i, j):
+                h[i][j] = edge1
+                h[j][i] = edge1
+            else:
+                h[i][j] = edge0
+                h[j][i] = edge0
+    return h
+
 def draw_graph(G, x):
     """
     Plots graph with colored nodes according to the coloring x
