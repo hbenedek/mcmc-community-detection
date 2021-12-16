@@ -5,8 +5,8 @@ from fast_metropolis import *
 from parameters import *
 from utils import *
 
-results = run_metropolis_fast(max_run, max_iter)
-#results = houdayer(max_run, max_iter, flip, fast_run=False)
+results = run_metropolis(max_run, max_iter)
+results = houdayer(max_run, max_iter, flip, fast_run=False)
 #x1, x2 = estimate_posterior_mean(results, 'houdayer')
 #x_true = partition_to_vector('block')
 

@@ -3,7 +3,7 @@ import numpy as np
 
 a = 5.9
 b = 0.1
-N = 1000
+N = 100
 
 prior = prior(N)
 print(f'community sizes: {prior} - {N-prior}')
