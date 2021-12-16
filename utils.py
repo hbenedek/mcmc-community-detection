@@ -18,6 +18,7 @@ def init_h(G, N, a, b):
     h = np.zeros((N, N))
     edge1 = np.log(a) - np.log(b)
     edge0 = np.log(1 - a / N) - np.log(1 - b / N)
+    print(f'edge energy: {"{:.3f}".format(edge1)}, non-edge energy: {"{:.3f}".format(edge0)}')
     for i in range(N):
         for j in range(i):
             if G.has_edge(i, j):
@@ -27,6 +28,13 @@ def init_h(G, N, a, b):
                 h[i][j] = edge0
                 h[j][i] = edge0
     return h
+
+def adjacency_to_h(A, N, a, b):
+    h = np.zeros((N, N))
+    h[A==1] = np.log(a) - np.log(b)
+    h[A==0] = np.log(1 - a / N) - np.log(1 - b / N)
+    return h
+
 
 def draw_graph(G, x):
     """
@@ -77,3 +85,6 @@ def load_pickle(file):
 
 def adjacency_to_networkx(A):
     return nx.convert_matrix.from_numpy_matrix(A)
+
+def networkx_to_adjacency(G):
+    return nx.linalg.graphmatrix.adjacency_matrix(G)

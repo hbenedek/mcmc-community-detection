@@ -23,7 +23,6 @@ def partition_to_vector(label):
     x[x == 0] = -1
     return x
 
-
 def calculate_local_hamiltonian(node, estimate):
     nodes = set(G.nodes) - set([node])
     return sum([h[node][n] * G.nodes[n][estimate] for n in list(nodes)])
