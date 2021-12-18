@@ -5,13 +5,23 @@ from fast_metropolis import *
 from parameters import *
 from utils import *
 
-results = run_metropolis(max_run, max_iter)
-results = houdayer(max_run, max_iter, flip, fast_run=False)
-#x1, x2 = estimate_posterior_mean(results, 'houdayer')
-#x_true = partition_to_vector('block')
 
-#overlap1 = calculate_overlap(x1, x_true)
-#overlap2 = calculate_overlap(x2, x_true)
+for i in [500, 200, 100, 50]:
+    print(f"###   HOUDAYER with flip {i}   ###")
+    mixed_results = houdayer(max_run, max_iter, i, fast_run=False)
+    m, l, u = get_averages_and_CI(mixed_results, max_iter)
+    dump_pickle([m, l, u], f"./results/houdayer_{i}.pickle")
 
-#print(f'Bayes overlap1: {"{:.3f}".format(overlap1)}')
-#print(f'Bayes overlap2: {"{:.3f}".format(overlap2)}')
+
+
+#mixed_results_200 = houdayer(max_run, max_iter, 200, fast_run=False)
+#dump_pickle(mixed_results_200, "./results/mixed_results_200.pickle")
+
+#mixed_results_100 = houdayer(max_run, max_iter, 100, fast_run=False)
+#dump_pickle(mixed_results_100, "./results/mixed_results_100.pickle")
+
+#mixed_results_50 = houdayer(max_run, max_iter, 50, fast_run=False)
+#dump_pickle(mixed_results_50, "./results/mixed_results_50.pickle")
+
+
+

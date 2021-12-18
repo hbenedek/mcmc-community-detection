@@ -43,10 +43,10 @@ def run_metropolis(max_run, max_iter, fast_run=True):
             iter = 0
             while iter < max_iter:
                 metropolis_step(x)
-                current_overlap = calculate_overlap(x_true, x)
-                if current_overlap == 1:
-                    print(iter)
-                result.overlaps1.append(current_overlap)
+
+                if not fast_run:
+                    current_overlap = calculate_overlap(x_true, x)
+                    result.overlaps1.append(current_overlap)
                 iter = iter + 1
                 pbar.update(1)
             

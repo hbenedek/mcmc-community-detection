@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+import scipy.stats
 import random
 import seaborn as sns
 import pickle
@@ -74,6 +75,7 @@ def plot_overlap_evolution(overlaps):
 
 
 def dump_pickle(data, file):
+    print("dumping results")
     with open(file, 'wb') as handle:
         pickle.dump(data , handle, protocol=pickle.HIGHEST_PROTOCOL)
     
@@ -88,3 +90,25 @@ def adjacency_to_networkx(A):
 
 def networkx_to_adjacency(G):
     return nx.linalg.graphmatrix.adjacency_matrix(G)
+
+def mean_confidence_interval(data, confidence=0.95):
+    a = 1.0 * np.array(data)
+    n = len(a)
+    m, se = np.mean(a), scipy.stats.sem(a)
+    h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+    return m, m-h, m+h
+
+
+def get_averages_and_CI(results, max_iter):
+    lower = []
+    mean = []
+    upper = []
+    for i in range(max_iter):
+        data1 = []
+        for result in results:
+            data1.append(result.overlaps1[i])
+        m, l, u = mean_confidence_interval(data1, confidence=0.95)
+        lower.append(l)
+        mean.append(m)
+        upper.append(u)
+    return mean, lower, upper
